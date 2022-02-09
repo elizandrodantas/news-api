@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(uuid())
+  username        String   @unique
+  password        String
+  name            String?
+  lastname        String?
+  cellphone       String?
+  email           String
+  sessionId       String?
+  mailConfirmated Boolean  @default(false)
+  cellConfirmated Boolean  @default(false)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  roles             PermissionRoles[]
+  Otp               Otp[]
+  service_wordpress WordPress[]
+  publish_wordpress WordPress_Publish[]
+  @@map("Users")
+}
+
+model Permission {
+  id          String @id @default(uuid())
+  name        String
+  description String
+
+  UserRole PermissionRoles[]
+  @@map("Permissions")
+}
+
+model PermissionRoles {
+  id                 String     @id @default(uuid())
+  userRelation       User       @relation(fields: [userId], references: [id])
+  userId             String
+  permissionRelation Permission @relation(fields: [permissionId], references: [id])
+  permissionId       String
+  scope              String
+  createdAt    DateTime @default(now())
+
+  @@map("Permission_roles")
+}
+
+model Otp {
+  id           String   @id @default(uuid())
+  type         String
+  code         String
+  secret       String
+  expireIn     Int
+  using        Boolean  @default(false)
+  workId       String?
+  userId       String
+  userRelation User     @relation(fields: [userId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("Otps")
+}
+
+
+model WordPress {
+  id              String  @id @default(uuid())
+  userId          String
+  wordpress_url   String
+  wordpress_user  String
+  wordpress_pass  String
+  wordpress_email String
+  uri             String
+  status          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+
+  relation        User     @relation(fields: [userId], references: [id])
+  @@map("service_wordpress")
+}
+
+model WordPress_Publish {
+  id                    String    @id @default(uuid())
+  userId                String
+  storage_register      String
+  id_article            String
+  title                 String
+  publish_status        String
+  service_id            String
+  publish_password      String?
+  subTitle              String?
+  postId                Int?
+  postUrl               String?
+  taskId                String
+  error                 Boolean    @default(false)
+  finish                Boolean    @default(false)
+  report                String?
+  createdAt             DateTime   @default(now())
+
+  relation_wp_publish   User   @relation(fields: [userId], references: [id])
+  @@map("service_wordpress_pu")
+}
+
+model StorageFuture {
+  id        String    @id @default(uuid())
+  identify  String
+  signature String?
+  template  String?
+  createdAt DateTime  @default(now())
+
+  @@map("storage")
+}

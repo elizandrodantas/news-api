@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "es2021",
+    "module": "commonjs",
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/@types"
+    ],
+    "lib": [
+      "ES6",
+      "esnext"
+    ],
+    "outDir": "dist",
+    "rootDir": "src",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "removeComments": true,
+    "declarationMap": true,
+    "declarationDir": "dist/@types",
+    "declaration": true,
+    "sourceMap": true
+  }
+}
