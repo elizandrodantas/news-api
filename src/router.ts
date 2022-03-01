@@ -12,6 +12,7 @@ import { ensuredAuthenticated } from "./middleware/ensuredAuthenticated";
 const app = Router();
 
 // SIGN AND REGISTER ROUTER
+app.get('/auth/init', new LoginController().init);
 app.post('/auth', new LoginController().middler);
 app.get('/auth/refresh', new LoginController().refreshToken);
 app.get('/auth/u/:username', new UserBasicController().getByUsername);
@@ -21,7 +22,8 @@ app.get('/register/email/:email', new RegisterController().existEmail);
 app.get('/register/cellphone/:cell', new RegisterController().existCell);
 
 // ROUTER USER
-app.get('/user', new UserBasicController().userInfo);
+app.get('/user', [new ensuredAuthenticated().middler], new UserBasicController().userInfo);
+app.get('/active', [new ensuredAuthenticated().middler], new UserBasicController().lastActive)
 app.post('/user/email/c', new ConfirmationsController().mail);
 app.post('/user/cell/c', new ensuredAuthenticated().middler, new ConfirmationsController().cell);
 app.get('/user/email/send', new ensuredAuthenticated().middler, new ConfirmationsController().reSendMail);

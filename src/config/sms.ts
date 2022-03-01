@@ -1,6 +1,4 @@
-const d = {
+export default {
     originator: "elizandro",
     ddi: "+55"
 }
-
-export default d;

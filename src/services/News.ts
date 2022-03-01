@@ -3,6 +3,7 @@ import { CoreWordPress } from "../core/Wordpress";
 import { Prisma } from "../database/prisma";
 import { StorageFuture } from "@prisma/client";
 import config from '../config/wordpres';
+import { validate as uuidValidate } from 'uuid';
 
 interface iResponsePatternFormat {
     _id: string;
@@ -118,16 +119,28 @@ export class News {
     async getContentByStorage(id: string): Promise<Error | iResponseContentFormat>{
         if(!id) return new Error("id storage not defined");
 
-        let getStorageData = await Prisma.storageFuture.findUnique({
-            where: { id }
-        });
-        if(!getStorageData) return new Error("storage not exist");
+        if(uuidValidate(id)){
+            let getStorageData = await Prisma.storageFuture.findUnique({
+                where: { id }
+            });
+            if(!getStorageData) return new Error("storage not exist");
+    
+            var { identify, template } = getStorageData;
 
-        let { identify, template } = getStorageData;
+            if(!template) return new Error("template invalid or not exist");
 
-        if(!template) return new Error("template invalid or not exist");
+            return await this.getContentById(identify, template);
+        }else{
+            var tamplete = null;
 
-        return await this.getContentById(identify, template);
+            if(id.indexOf("https://brasil.elpais.com/") === 0 && !id.match('globo.com/')) tamplete = "elpais";
+            if(id.indexOf("https://brasil.elpais.com/") !== 0 && id.match('globo.com/')) tamplete = "g1";
+            if(/^[0-9a-fA-F]{24}$/.test(id)) tamplete = "r7";
+
+            if(tamplete === null) return new Error("source not exist");
+            
+            return await this.getContentById(id, tamplete);
+        }
     }
 
     async getContentById(id: string, template: string): Promise<Error | iResponseContentFormat>{
@@ -186,7 +199,7 @@ export class News {
                 }
             }else{
                 response.data.push({
-                    name: "EL PAIS BRASIL",
+                    name: "EL PAIS",
                     data: config.category.array.elpais
                 });
                 response.data.push({

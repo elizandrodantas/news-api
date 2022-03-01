@@ -1,3 +1,4 @@
+import moment from "moment";
 import { Prisma } from "../database/prisma"
 
 export async function sessionIdUpdate(session: string, userId: string){
@@ -8,7 +9,8 @@ export async function sessionIdUpdate(session: string, userId: string){
             id: userId
         },
         data: {
-            sessionId: session
+            sessionId: session,
+            lastActive: moment().unix()
         }
     });
 

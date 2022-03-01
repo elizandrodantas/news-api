@@ -4,6 +4,7 @@ import ms from 'ms';
 import { forgeSecure } from '../secure/forge';
 import { sessionIdUpdate } from '../secure/sessionUpdate';
 import { PermissionRoles, User } from '@prisma/client';
+import { Prisma } from '../database/prisma';
 
 interface iDecodeJwt {
     username: string;
@@ -95,11 +96,11 @@ export class JsonWebToken {
 
         if(!token || token.indexOf("eyJ") !== 0) return new Error("session invalid")
 
-        let verifyToken: Error | any = await verify(token, this.key, async (err: VerifyErrors, dec: any) => {
-            if(err) return new Error("session invalid, try again");
+        let verifyToken = await verify(token, this.key, async (err: VerifyErrors, dec: any) => {
+            if(err) return new Error("session expired");
 
             return dec;
-        });
+        }) as Error | any;
 
         if(verifyToken instanceof Error) return new Error(verifyToken.message);
 
@@ -128,6 +129,21 @@ export class JsonWebToken {
         if(decSub !== jti) return new Error("session invalid, again login");
 
         return verifyToken;
+    }
+
+    public async sessionVerify(userId: string, sessionId: string){
+        if(!userId || !sessionId) return new Error("session expired");
+
+        let user = await Prisma.user.findFirst({
+            where: {
+                id: userId,
+                sessionId
+            }
+        });
+
+        if(!user) return new Error("session expired");
+
+        return user
     }
 
     public decode({

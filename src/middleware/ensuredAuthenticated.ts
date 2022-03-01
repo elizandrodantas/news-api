@@ -8,8 +8,14 @@ export class ensuredAuthenticated {
 
         let verifyEnsured = await new JsonWebToken().verify({bearer: authorization, type: "token"});
         if(verifyEnsured instanceof Error) return response.status(401).json({error: verifyEnsured.message});
-        request.decoded = verifyEnsured; 
+        
+        let { client_id, jti } = verifyEnsured;
+
+        let verifySession = await new JsonWebToken().sessionVerify(client_id, jti);
+        if(verifySession instanceof Error) return response.status(401).json({error: verifySession.message});
+        
+        request.decoded = verifyEnsured;
        
-        return next(); 
+        return next();
     }
 }

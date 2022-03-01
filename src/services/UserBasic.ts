@@ -3,6 +3,7 @@ import { Prisma } from "../database/prisma";
 import { JsonWebToken } from "../jobs/JsonWebToken";
 import { hideMaskHalf, hideMaskMail } from "../util/mask";
 import adminSafe from '../util/admin';
+import moment from "moment";
 
 export class UserBasic {
     async getUserByUsername(username: string): Promise<Error | User>{
@@ -72,17 +73,51 @@ export class UserBasic {
         return user;
     }
 
-    async userInfo(auth: string): Promise<Error | User>{
-        if(!auth) return new Error("unauthorized");
+    async userInfo(id: string, jti: string): Promise<Error | User>{
+        if(!id || !jti) return new Error("unauthorized");
 
-        let verify = await new JsonWebToken().verify({bearer: auth, type: "token"});
-        if(verify instanceof Error) return new Error(verify.message);
-        
-        let { client_id, jti } = verify;
-
-        let user = await this.getUserByIdAndSession(client_id, jti);
+        let user = await this.getUserByIdAndSession(id, jti);
         if(user instanceof Error) return new Error(user.message);
 
         return user;
+    }
+
+    async lastActive(id: string, jti: string){
+        if(!id) return new Error("unauthorized");
+
+        let verifyUserCondition = await Prisma.user.findFirst({
+            where: {
+                id,
+                active: true,
+                mailConfirmated: true
+            }
+        })
+
+        if(!verifyUserCondition) return new Error("unauthorized");
+        
+        let { sessionId } = verifyUserCondition;
+
+        if(sessionId !== jti) return new Error("session invalid, try again sign-in");
+
+        Promise.resolve(this.updateLastActiveJob(id));
+
+        return {
+            active: true,
+            lastActive: moment().unix(),
+            sessionId: jti
+        }
+    }
+
+    private async updateLastActiveJob(id: string): Promise<void>{
+        if(id){
+            await Prisma.user.update({
+                where: {
+                    id
+                },
+                data: {
+                    lastActive: moment().unix()
+                }
+            })
+        }
     }
 }

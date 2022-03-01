@@ -569,10 +569,10 @@ export class Service_WordPress {
             json.id_article = params.id_article;
             json.title = params.title ? params.title : "";
             json.publish_status = params.publish_status ? params.publish_status : "";
-            json.subTitle = params.subTitle ? params.subTitle : null;
+            json.subTitle = params.subTitle ? params.subTitle : null; 
             json.taskId = params.taskId;
             json.service_id = this.serviceId;
-
+            
             let start = await Prisma.wordPress_Publish.create({
                 data: json
             });

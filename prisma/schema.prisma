@@ -22,6 +22,7 @@ model User {
   mailConfirmated Boolean  @default(false)
   cellConfirmated Boolean  @default(false)
   active          Boolean  @default(true)
+  lastActive      Int?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -91,11 +92,11 @@ model WordPress_Publish {
   userId                String
   storage_register      String
   id_article            String
-  title                 String
+  title                 String    @db.LongText
   publish_status        String
   service_id            String
   publish_password      String?
-  subTitle              String?
+  subTitle              String?   @db.LongText
   postId                Int?
   postUrl               String?
   taskId                String

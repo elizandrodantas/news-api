@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 config();
 
-const d = {
+export default {
     baseUrl: {
         elpais: process.env.URL_SERVICE_NEWS_ELPAIS,
         g1: process.env.URL_SERVICE_NEWS_G1,
@@ -127,5 +127,3 @@ const d = {
         }
     }
 }
-
-export default d;

@@ -3,9 +3,9 @@ import { UserBasic } from "../services/UserBasic";
 
 export class UserBasicController {
     async userInfo(request: Request, response: Response){
-        let { authorization } = request.headers;
+        let { client_id, jti } = request.decoded;
 
-        let execute = await new UserBasic().userInfo(authorization);
+        let execute = await new UserBasic().userInfo(client_id, jti);
         if(execute instanceof Error) return response.status(401).json({error: execute.message});
 
         return response.status(200).json(execute);
@@ -18,5 +18,14 @@ export class UserBasicController {
         if(execute instanceof Error) return response.status(400).json({error: execute.message});
 
         return response.status(200).json(execute);
+    }
+
+    async lastActive(request: Request, response: Response){
+        let { client_id, jti } = request.decoded;
+
+        let execute = await new UserBasic().lastActive(client_id, jti);
+        if(execute instanceof Error) return response.status(403).json({error: execute.message});
+
+        return response.status(201).json(execute);
     }
 }
