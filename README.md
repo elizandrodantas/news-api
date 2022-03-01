@@ -1,6 +1,8 @@
-# NEWS-API-V3 :statue_of_liberty:
+# NEWS-API :statue_of_liberty:
 
-designed for educational purposes. any copyright infringement, [contact](#contact)
+project searches for articles in some Brazilian news sites;
+
+designed for educational purposes. any copyright infringement, [contact](#contact);
 
 # Sources used in code :earth_americas:
 
