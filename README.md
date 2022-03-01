@@ -1,6 +1,6 @@
 # NEWS-API-V3 :statue_of_liberty:
 
-educational end project :)
+designed for educational purposes. any copyright infringement, [contact](#contact)
 
 # Sources used in code :earth_americas:
 
