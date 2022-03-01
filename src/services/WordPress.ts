@@ -7,6 +7,7 @@ import WPAPI from 'wpapi';
 import crypto from 'crypto';
 import { News } from "./News";
 import uid2 from 'uid2';
+import { v4 as uuidv4 } from 'uuid';
 import { QueueServicePattern } from "../jobs/QueueService";
 import { CoreWordPress } from "../core/Wordpress";
 
@@ -47,7 +48,6 @@ interface iResponseWpOption {
 }
 
 interface iPayloadOptionsAddImage {
-    title: string;
     author?: number;
     status: "publish" | "future" | "draft" | "pending" | "private";
     caption?: string;
@@ -63,6 +63,7 @@ interface iResponseAddImage {
     postAssociated: number;
     imageId: number;
     imageUrl: string;
+    title: string;
 }
 
 interface iResponseStatus {
@@ -419,14 +420,15 @@ export class Service_WordPress {
         if(!this.bearer) return new Error("mandatory is authorized in the service");
         if(!this.service_status) return new Error("the service is not working, try edict to confirm the functionality");
         
-        let { status, title, description, author, url, caption, post_id } = options;
+        let { status, description, author, url, caption, post_id } = options;
 
         if(post_id && typeof post_id !== "number") return new Error("post id invalid");
         if(!url) return new Error("url image not defined");
-        if(!title) return new Error("title not defined");
         if(!status) status = "pending";
 
         let pathLogin = this.url.split('/').length === 4 ? "wp-json" : "/wp-json";
+
+        let title = `robot-${uuidv4().split('-').join('')}`;
 
         let json: any = {
             title,
@@ -459,6 +461,7 @@ export class Service_WordPress {
         
                         return {
                             status,
+                            title,
                             updated: true,
                             associated: true,
                             postAssociated: post_id,
@@ -468,6 +471,7 @@ export class Service_WordPress {
                     }catch(error: any){
                         return {
                             status,
+                            title,
                             updated: true,
                             associated: false,
                             postAssociated: null,
@@ -478,6 +482,7 @@ export class Service_WordPress {
                 }else{
                     return {
                         status,
+                        title,
                         updated: true,
                         associated: false,
                         postAssociated: null,
@@ -502,11 +507,11 @@ export class Service_WordPress {
 
         let { status, password, category, id, media_id } = params;
 
-        if(!status) return new Error("status not defined");
+        if(!status) status = "pending";
         if(status && status === "private" && !password) return new Error("posts private required the password");
-        if(!category || typeof category !== "object") return new Error("at least one category needs to be filled");
-        category = category.filter(e => typeof e === "number");
-        if(category.length <= 0) return new Error("at least one category needs to be filled");
+        // if(!category || typeof category !== "object") return new Error("at least one category needs to be filled");
+        if(category && typeof category === "object")category = category.filter(e => typeof e === "number");
+        // if(category.length <= 0) return new Error("at least one category needs to be filled");
         if(!id) return new Error("id storage not defined");
         if(media_id && typeof media_id !== "number") return new Error("a number in the id_media is expected");
 

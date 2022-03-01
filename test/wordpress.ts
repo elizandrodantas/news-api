@@ -24,7 +24,7 @@ import axios from 'axios';
     // }))
 
     // const wp = new wpapi({
-    //     endpoint: "http://dev.portalnpm.com/wp-json"
+    //     endpoint: ""
     // });
 
 
@@ -40,7 +40,7 @@ import axios from 'axios';
     //     wp.media()
     //     .file(e.data, 'nameimage.jpg')
     //     .setHeaders({
-    //         authorization: "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZGV2LnBvcnRhbG5wbS5jb20iLCJpYXQiOjE2NDQyNTgyOTgsIm5iZiI6MTY0NDI1ODI5OCwiZXhwIjoxNjQ0ODYzMDk4LCJkYXRhIjp7InVzZXIiOnsiaWQiOiIxIn19fQ.75nB04Kl9MsBQWSznoyZYmqONWcCbnP5oVjNgB7J6KQ"
+    //         authorization: "Bearer "
     //     }).create({
     //         title: "teste novo",
     //         description: "teste teste"
@@ -50,7 +50,7 @@ import axios from 'axios';
     // wp.media()
     // .file('./test/bolsonaro-1-1.jpg')
     // .setHeaders({
-    //     authorization: "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvZGV2LnBvcnRhbG5wbS5jb20iLCJpYXQiOjE2NDQyNTgyOTgsIm5iZiI6MTY0NDI1ODI5OCwiZXhwIjoxNjQ0ODYzMDk4LCJkYXRhIjp7InVzZXIiOnsiaWQiOiIxIn19fQ.75nB04Kl9MsBQWSznoyZYmqONWcCbnP5oVjNgB7J6KQ"
+    //     authorization: "Bearer "
     // }).create({
     //     title: "teste novo",
     //     description: "teste teste"

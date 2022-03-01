@@ -1,6 +1,6 @@
 {
   "name": "api-news-v3",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "api elizandrodantas",
   "main": "dist/app.js",
   "author": "<dantaspm@hotmail.com>",
