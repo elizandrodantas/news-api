@@ -581,7 +581,7 @@ export class Service_WordPress {
                 data: json
             });
 
-            if(!start) return this.jobUpdateStatus(params.taskId, {finish: true, error: true, report: `error starting job`});
+            if(!start) return console.log(`[x] ERROR STARTING JOB - *****I****`);
 
             let tags = [], controller_wp = new WPAPI({ endpoint: params.endpoint });
 

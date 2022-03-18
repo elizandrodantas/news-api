@@ -158,8 +158,8 @@ export class CoreWordPress {
             let { data } = get, { content } = data;
 
             let response = {
-                _id: uuidv4(),
-                id: data.section_id,
+                _id: data.section_id || uuidv4(),
+                id,
                 "url-notice": data.shortened_url || `http://${data.url}` || "",
                 title: data.title,
                 subTitle: data.subtitle || "",
@@ -262,8 +262,8 @@ export class CoreWordPress {
             let { data } = get, { resource } = data, img = this.resolve_photoG1(resource.bodyData);
 
             let response = {
-                _id: uuidv4(),
-                id: resource.id,
+                _id: resource.id || uuidv4(),
+                id,
                 "url-notice": id,
                 title: resource.title,
                 subTitle: resource.subtitle || "",
@@ -359,8 +359,8 @@ export class CoreWordPress {
         let { data } = get, { headlines, metas, author } = data;
 
         let response = {
-            _id: uuidv4(),
-            id: data.id,
+            _id: data.id || uuidv4(),
+            id,
             'url-notice': data.uri,
             title: headlines.title,
             subTitle: headlines.subTitle,
