@@ -3,84 +3,11 @@ import { compareSync } from 'bcrypt';
 import moment from 'moment';
 import { Prisma } from '../database/prisma';
 import { JsonWebToken } from '../jobs/JsonWebToken';
-import forge from 'node-forge';
 import { Request, Response } from 'express';
-import uid2 from 'uid2';
-import { ForgeSecure } from '../core/Forge';
-
-interface iDecodeJwt {
-    username: string;
-    sub: string;
-    jti: string;
-    iss: string;
-    aud: string;
-    client_id: string;
-    scope: [string];
-    iat: number;
-    exp: number;
-}
 
 export class SignIn {
     async init(request: Request, response?: Response){
-        let { headers } = request,
-        device_name = headers["x-device-name"] as string,
-        device_id = headers["x-device-id"] as string,
-        { authorization } = headers as { authorization: string }, username = "";
-
-        if(!device_id || !device_name) return new Error(JSON.stringify({
-            status: 480,
-            message: "device invalid"
-        }))
-
-        if(!authorization) return new Error(JSON.stringify({
-            status: 480,
-            message: "request invalid [2x01 - "+ uid2(16) +"]"
-        }));
-
-        if(authorization.indexOf("Basic") !== 0) return new Error(JSON.stringify({
-            status: 480,
-            message: "request invalid [2x02 - "+ uid2(16) +"]"
-        }));
-        
-        
-        try{
-            authorization = authorization.split(' ')[1];
-            username = forge.util.decode64(authorization);
-            username = username.split(':')[0];
-            device_id = forge.util.decode64(device_id);
-            device_name = forge.util.decode64(device_name);
-        }catch(e){
-            return new Error(JSON.stringify({
-                status: 480,
-                message: "request invalid [2x03 - "+ uid2(16) +"]"
-            }));
-        }
-
-        
-        try{
-            var create = new ForgeSecure().createRequestCertificate({
-                username,
-                device_id,
-                device_name
-            });
-        }catch(e){
-            return new Error(JSON.stringify({
-                status: 500,
-                message: "error internal [2x03 - "+ uid2(16) +"]"
-            }));
-        }
-
-        if(response && response.setHeader){
-            response.setHeader("register-task", uid2(64));
-            response.setHeader("username", username);
-            response.setHeader("pem", create);
-        }
-
-        let cert = "-----BEGIN CERTIFICATE-----\n";
-        cert+=create;
-        cert+="\n-----END CERTIFICATE-----"
-
-        return cert;
+       return {}
     }
 
     async execute({

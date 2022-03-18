@@ -35,5 +35,4 @@ app.get('/news/storage/:id', new NewsController().getStorage);
 app.get('/news/content/:id(*)', new NewsController().getContent);
 app.get('/news/category', new NewsController().getOptionsCategories);
 
-
 export { app as routerSafe }

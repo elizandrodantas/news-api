@@ -1,6 +1,11 @@
-import { User, WordPress_Publish } from "@prisma/client";
+import { User, WordPress, WordPress_Publish } from "@prisma/client";
 import { Request, Response } from "express";
 import { Service_WordPress } from "../services/WordPress";
+
+type iJob = Error |
+        { status: boolean; count: number; data: WordPress[] |
+        { service: string; count: number; jobs: WordPress_Publish[]}[]} |
+        { status: boolean; count: number; data: WordPress_Publish[]}
 
 export class WordPressController {
     async status(request: Request, response: Response){
@@ -16,7 +21,7 @@ export class WordPressController {
         let { serviceId } = request.params;
         let { client_id } = request.decoded;
 
-        let job: Error | User | { status: boolean; count: number; data: WordPress_Publish[]}
+        let job: iJob
 
         if(serviceId){
             job = await new Service_WordPress(client_id, serviceId).getJobsWithService();

@@ -1,19 +1,25 @@
 export function hideMaskMail(mail: string): string{
-    let [user, domain] = mail.split('@'), r = user.substring(0, user.length / 2), n = "";
+    let [user, domain] = mail.split('@'), c = Math.floor(user.length / 2), r = user.substring(0, c), n = "";
 
     for(let i = 0; i < user.length - r.length;i++){
         n+= "*";
     };
 
-    return user + n + domain;
+    return `${user.substring(0, c) + n}@${domain}`;
 }
 
 export function hideMaskHalf(cell: string){
-    let r = cell.substring(0, cell.length / 2), n = "";
+    let c = cell.length,
+        fair = Math.floor(70 * c / 100),
+        diff = Math.floor(c - fair),
+        i = Math.floor(diff / 2),
+        n = "",
+        pref = cell.substring(0, i),
+        suff = cell.substring(fair + i, c);
 
-    for(let i = 0; i < cell.length - r.length; i++){
+    for(let i = 0; i < fair; i++){
         n+= "*";
     }
 
-    return r + n;
+    return `${pref}${n}${suff}`;
 }

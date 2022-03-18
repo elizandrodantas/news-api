@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `users` ADD COLUMN `OAuth` BOOLEAN NULL,
+    ADD COLUMN `secretId` VARCHAR(191) NULL;

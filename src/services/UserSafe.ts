@@ -1,6 +1,24 @@
 import moment from "moment";
 import { Prisma } from "../database/prisma";
 import { RegisterUser } from "./RegisterUser";
+import { v4 as uuidv4 } from 'uuid';
+import admin from "../util/admin";
+
+type iOptionsActionOAuth = "reset" | "block" | "remove" | "unlock" | "create";
+
+type iResponseRegisterOAuth = {
+    created?: string;
+    OAuth?: boolean;
+    clientId?: string;
+    secretId?: string;
+}
+
+interface iResponseActionOAuth extends iResponseRegisterOAuth{
+    status: boolean;
+    removed?: string;
+    block?: string;
+    unlock?: string;
+}
 
 export class UserSafe {
     async list(): Promise<Error | any[]>{
@@ -25,7 +43,7 @@ export class UserSafe {
         return get;
     }
 
-    async info(id: string){
+    async info(id: string, su: boolean = false){ 
         if(!id) return new Error("id not defined");
 
         let get = await Prisma.user.findFirst({
@@ -38,6 +56,7 @@ export class UserSafe {
         });
 
         if(!get) return new Error("user not exist");
+        if(admin(get.roles) && !su) return new Error("user without permission");
 
         let { roles } = get;
 
@@ -134,7 +153,7 @@ export class UserSafe {
 
         if(!su) return new Error("no permission for user remover");
 
-        let verifyUserExist = await Prisma.user.findUnique({ where: { id }});
+        let verifyUserExist = await Prisma.user.findUnique({ where: { id } });
         if(!verifyUserExist) return new Error("user not exist");
 
         await Prisma.user.update({
@@ -175,9 +194,7 @@ export class UserSafe {
 
         if(!user) return new Error("user not exist");
 
-        let { roles } = user;
-
-        if(roles.some(i => i && i.scope.split(':')[0] === process.env.SU_ADMIN) && !su) return new Error("not permision edit user");
+        if(admin(user.roles) && !su) return new Error("not permision edit user");
 
         let data: {
             name?: string;
@@ -220,5 +237,96 @@ export class UserSafe {
         }
 
         return required[type];
+    }
+
+    async actionOauth(id: string, action: iOptionsActionOAuth): Promise<Error | iResponseActionOAuth>{
+        if(!id) return new Error("user not found");
+
+        let user = await Prisma.user.findUnique({where: { id }});
+        if(!user) return new Error("user not exist");
+
+        let { OAuth, clientId, secretId } = user;
+
+        if(action === "create"){
+            if(OAuth || clientId && secretId) return new Error("OAuth already register");
+        }
+
+        if(action === "remove"){
+            if(!OAuth || !clientId || !secretId) return new Error("OAuth already removed");
+        }
+
+        if(action === "block" || action === "unlock"){
+            if(!clientId && !secretId) return new Error("OAuth not registered");
+        }
+
+        if(action === "block"){
+            if(!OAuth) return new Error("OAuth already blocked");
+        }
+
+        if(action === "unlock"){
+            if(OAuth) return new Error("OAuth already unlocked");
+        }
+
+        let up = await this.OAUTH(id, action);
+        if(up instanceof Error) return new Error(up.message);
+
+        return up;
+    }
+
+    private async OAUTH(id: string, action: "reset" | "block" | "remove" | "unlock" | "create"): Promise<Error | iResponseActionOAuth>{
+        if(!id) return new Error("user id not defined");
+
+        if(action === "create" || action === "reset"){
+            let json = {
+                OAuth: true,
+                secretId: uuidv4(),
+                clientId: uuidv4()
+            }
+
+            let up = await Prisma.user.update({
+                where: { id },
+                data: json
+            });
+    
+            if(!up) return new Error("error create new OAuth");
+    
+            return {
+                status: true,
+                created: moment().toISOString(),
+                ...json
+            }
+        }
+        
+        if(action === "remove"){
+            let up = await Prisma.user.update({
+                where: { id },
+                data: { OAuth: false, clientId: null, secretId: null }
+            });
+
+            if(!up) return new Error("error remove OAuth");
+
+            return {
+                status: true,
+                removed: moment().toISOString()
+            }
+        }
+
+        if(action === "block" || action === "unlock"){
+            let json = { OAuth: action === "block" ? false : true }
+
+            let up = await Prisma.user.update({
+                where: { id },
+                data: json
+            });
+
+            if(!up) return new Error("error " + action + " user");
+
+            return {
+                status: true,
+                [action]: moment().toISOString()
+            }
+        }
+
+        return new Error("action not defined or not found");
     }
 }

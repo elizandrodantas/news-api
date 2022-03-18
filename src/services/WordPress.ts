@@ -1,6 +1,6 @@
 import { User, WordPress, WordPress_Publish } from "@prisma/client";
 import axios from "axios";
-import moment from "moment";
+import moment, { invalid } from "moment";
 import { Prisma } from "../database/prisma";
 import { toBase64, toUtf8 } from '../util/base64';
 import WPAPI from 'wpapi';
@@ -10,6 +10,7 @@ import uid2 from 'uid2';
 import { v4 as uuidv4 } from 'uuid';
 import { QueueServicePattern } from "../jobs/QueueService";
 import { CoreWordPress } from "../core/Wordpress";
+import { throws } from "assert";
 
 interface iPayloadAdd {
     username: string;
@@ -86,6 +87,7 @@ interface iResponseStatusService {
     responseTime: number;
     responseTimeType: string;
 }
+
 
 export class Service_WordPress {
     url: string;
@@ -508,10 +510,7 @@ export class Service_WordPress {
         let { status, password, category, id, media_id } = params;
 
         if(!status) status = "pending";
-        if(status && status === "private" && !password) return new Error("posts private required the password");
-        // if(!category || typeof category !== "object") return new Error("at least one category needs to be filled");
         if(category && typeof category === "object")category = category.filter(e => typeof e === "number");
-        // if(category.length <= 0) return new Error("at least one category needs to be filled");
         if(!id) return new Error("id storage not defined");
         if(media_id && typeof media_id !== "number") return new Error("a number in the id_media is expected");
 
@@ -568,7 +567,7 @@ export class Service_WordPress {
     }){
         try{
             let json: any = {};
-            json.publish_password = params.publish_status && params.publish_status === "private" ? params.publish_password || "" : null;
+            json.publish_password = params.publish_status ? params.publish_password : null;
             json.userId = params.userId;
             json.storage_register = params.storage_register;
             json.id_article = params.id_article;
@@ -601,7 +600,7 @@ export class Service_WordPress {
                             }
                         })
                     }
-                }).catch(e => "");
+                })
             }
 
             json = {};
@@ -612,8 +611,8 @@ export class Service_WordPress {
             if(tags.length > 0) json.tags = tags;
             if(params.category && typeof params.category === "object") json.categories = params.category;
             if(params.media_id && typeof params.media_id === "number")json.featured_media = params.media_id;
-            if(params.publish_status === "private" && params.publish_password) json.password = params.publish_password;
-
+            if(params.publish_password) json.password = params.publish_password;
+     
             await controller_wp.posts().setHeaders({ authorization: "Bearer " + this.bearer }).create(json)
             .then(e => {
                 return this.jobUpdateStatus(params.taskId, {
@@ -632,7 +631,6 @@ export class Service_WordPress {
                 });
             });
         }catch(_: any){
-            console.log(_)
             this.jobUpdateStatus(params.taskId, {
                 finish: true,
                 error: true,
@@ -677,20 +675,58 @@ export class Service_WordPress {
         }
     }
 
-    async getJobsAndServices(): Promise<Error | User>{
+    async getJobsAndServices(): Promise<Error | { status: boolean; count: number; data: WordPress[] | { service: string; count: number; jobs: WordPress_Publish[]}[]}>{
         if(!this.userId) return new Error("error internal");
 
-        let user = await Prisma.user.findUnique({
-            where: { id: this.userId },
-            include: {
-                publish_wordpress: true,
-                service_wordpress: true
+        let services = await Prisma.wordPress.findMany({
+            where: {
+                userId: this.userId
             }
         });
 
-        if(!user) return new Error("user not exist");
+        if(services.length <= 0) return {
+            status: true,
+            count: services.length,
+            data: services
+        }
 
-        return user;
+        let find = [], results: { service: string; count: number; jobs: WordPress_Publish[]}[] = [];
+
+        for(let indice of services){
+            let { id } = indice;
+
+            find.push(Prisma.wordPress_Publish.findMany({
+                where: { service_id: id, userId: this.userId },
+                orderBy: [{
+                    createdAt: "asc"
+                }]
+            }));
+        }
+
+        await Promise.all(find)
+        .then(e => {
+            e.map(indice => {
+                for(let service of services){
+                    let { id } = service;
+
+                    let r = indice.filter(e => e.service_id === id), count = 0;
+
+                    try {count = r.length} catch(e) {}
+
+                    results.push({
+                        service: id,
+                        count,
+                        jobs: r
+                    });
+                }
+            });
+        });
+
+        return {
+            status: true,
+            count: results.length,
+            data: results
+        };
     }
 
     async getJob(taskId: string): Promise<Error | WordPress_Publish>{
@@ -698,7 +734,10 @@ export class Service_WordPress {
         if(!taskId) return new Error("task id not defined");
 
         let job = await Prisma.wordPress_Publish.findFirst({
-            where: { taskId, userId: this.userId }
+            where: { taskId, userId: this.userId },
+            orderBy: [{
+                createdAt: "asc"
+            }]
         });
 
         if(!job) return new Error("task job not exist");

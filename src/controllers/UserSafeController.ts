@@ -14,7 +14,7 @@ export class UserSafeController {
     async info(request: Request, response: Response){
         let { id } = request.params;
 
-        let execute = await new UserSafe().info(id);
+        let execute = await new UserSafe().info(id, request.su);
         if(execute instanceof Error) return response.status(400).json({error: execute.message});
 
         return response.status(200).json(execute);
@@ -60,6 +60,51 @@ export class UserSafeController {
         let execute = await new UserSafe().edit(id, request.body, request.su);
         if(execute instanceof Error) return response.status(400).json({error: execute.message});
 
+        return response.status(200).json(execute);
+    }
+
+    async createOauth(request: Request, response: Response){
+        let { id } = request.body;
+
+        let execute = await new UserSafe().actionOauth(id, "create");
+        if(execute instanceof Error) return response.status(400).json({error: execute.message});
+        
+        return response.status(200).json(execute);
+    }
+
+    async resetOauth(request: Request, response: Response){
+        let { id } = request.body;
+
+        let execute = await new UserSafe().actionOauth(id, "reset");
+        if(execute instanceof Error) return response.status(400).json({error: execute.message});
+        
+        return response.status(200).json(execute);
+    }
+
+    async removeOauth(request: Request, response: Response){
+        let { id } = request.body;
+
+        let execute = await new UserSafe().actionOauth(id, "remove");
+        if(execute instanceof Error) return response.status(400).json({error: execute.message});
+        
+        return response.status(200).json(execute);
+    }
+
+    async blockOauth(request: Request, response: Response){
+        let { id } = request.params;
+
+        let execute = await new UserSafe().actionOauth(id, "block");
+        if(execute instanceof Error) return response.status(400).json({error: execute.message});
+        
+        return response.status(200).json(execute);
+    }
+
+    async unlockOauth(request: Request, response: Response){
+        let { id } = request.params;
+
+        let execute = await new UserSafe().actionOauth(id, "unlock");
+        if(execute instanceof Error) return response.status(400).json({error: execute.message});
+        
         return response.status(200).json(execute);
     }
 }

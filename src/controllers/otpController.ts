@@ -7,7 +7,7 @@ import { Prisma } from "../database/prisma";
 export class OTP {
     code: string;
     secret: string;
-    type: "sms" | "mail";
+    type: "sms" | "mail" | "oauth";
     counter: number;
     taskId: string;
     expire: number;
@@ -15,7 +15,7 @@ export class OTP {
 
     constructor(
         public userId: string,
-        type: "sms" | "mail",
+        type: "sms" | "mail" | "oauth",
         public vCode?: string,
         public vkey?: string
     ){

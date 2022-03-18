@@ -8,6 +8,7 @@ import { routerAdmin } from "./router.admin";
 import { TaskOtpController } from "./controllers/TaskOtpController";
 import { UserBasicController } from "./controllers/UserBasicController";
 import { ensuredAuthenticated } from "./middleware/ensuredAuthenticated";
+import { routerOauth } from "./router.oauth";
 
 const app = Router();
 
@@ -38,6 +39,7 @@ ROUTER API
 
 app.use('/admin', routerAdmin);
 app.use('/api', routerSafe);
+app.use('/oauth', routerOauth);
 
 export {
     app as router

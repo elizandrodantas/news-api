@@ -14,6 +14,9 @@ model User {
   id              String   @id @default(uuid())
   username        String   @unique
   password        String
+  secretId        String?
+  clientId        String?
+  OAuth           Boolean?
   name            String?
   lastname        String?
   cellphone       String?
@@ -31,6 +34,24 @@ model User {
   service_wordpress WordPress[]
   publish_wordpress WordPress_Publish[]
   @@map("Users")
+}
+
+model DeviceRegister {
+  id                  String  @id @default(uuid())
+  device_id           String?
+  device_name         String?
+  device_status       Boolean @default(true)
+  grance_expired      Int?
+  cert_dn             String? @db.LongText
+  signed_cert_base64  String? @db.LongText
+  csr_base64          String? @db.LongText
+  userId              String?
+  grossIdentifier     String?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("Device")
 }
 
 model Permission {

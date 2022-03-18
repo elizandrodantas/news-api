@@ -1,6 +1,5 @@
 import { User } from "@prisma/client";
 import { Prisma } from "../database/prisma";
-import { JsonWebToken } from "../jobs/JsonWebToken";
 import { hideMaskHalf, hideMaskMail } from "../util/mask";
 import adminSafe from '../util/admin';
 import moment from "moment";
@@ -30,6 +29,8 @@ export class UserBasic {
         user.updatedAt = undefined;
         user.sessionId = undefined;
         user.active = undefined;
+        user.secretId = undefined;
+        user.clientId = undefined;
 
         return user;
     }

@@ -239,7 +239,7 @@ export class CoreWordPress {
                     }catch(_){}
                 }
             }
-   
+     
             return this;
         }catch(_){
             if(this.raw) return console.log(`[x] ERROR GET ARTICLES {G1}`), this;

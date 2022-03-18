@@ -21,9 +21,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "removeComments": true,
-    "declarationMap": true,
     "declarationDir": "dist/@types",
     "declaration": true,
-    "sourceMap": true
   }
 }

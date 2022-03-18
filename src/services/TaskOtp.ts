@@ -14,7 +14,7 @@ export class TaskOtp {
         if(!task) return new Error("task not exist");
 
         task.secret = task.using ? task.secret : undefined;
-        task.code = task.using ? hideMaskHalf(task.code) : undefined;
+        task.code = hideMaskHalf(task.code);
 
         return task;
     }

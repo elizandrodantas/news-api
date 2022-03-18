@@ -1,6 +1,7 @@
 export default {
     __DEV__: true,
     APP_NAME: "Elizandro Api",
+    ORGANIZATION_NAME: "Elizandro Tecnlogy",
     baseUrl: {
         dev: "http://localhost:8080",
         prod: ""
