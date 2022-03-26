@@ -5,14 +5,14 @@ declare global {
       interface Request {
         decoded?: {
           username: string;
-          sub: string;
-          jti: string;
-          iss: string;
-          aud: string;
+          sub?: string;
+          jti?: string;
+          iss?: string;
+          aud?: string;
           client_id: string;
-          scope: [string];
-          iat: number;
-          exp: number;
+          scope?: [string];
+          iat?: number;
+          exp?: number;
         },
         highPermission?: {
           isAdmin: boolean;

@@ -37,6 +37,7 @@ export class SignIn {
         let { password: encoded, id: userIdentify, active, mailConfirmated, roles, lastActive } = userVerify;
         
         if(!active) return new Error("account desabled");
+  
         if(Math.floor(moment().diff(moment.unix(lastActive)) / 1000) <= 10) return new Error("user already logged in, try again a few minutes");
         if(!mailConfirmated) return {error: true, sreen: "mail", id: userIdentify};
         

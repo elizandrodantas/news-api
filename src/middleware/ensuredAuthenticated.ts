@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-import { DeviceAuth } from "../jobs/DeviceAuth";
+
+import { BasicAuth } from "../jobs/BasicAuth";
 import { JsonWebToken } from "../jobs/JsonWebToken";
+import { UserBasic } from '../services/UserBasic';
 
 export class ensuredAuthenticated {
     async middler(request: Request, response: Response, next: NextFunction){
@@ -18,24 +20,23 @@ export class ensuredAuthenticated {
             if(verifySession instanceof Error) return response.status(401).json({error: verifySession.message});
             
             request.decoded = verifyEnsured;
-        
+            Promise.resolve([ new UserBasic().updateLastActiveJob(client_id) ]);
+
             return next();
         }
 
         if(authorization.indexOf("Basic") === 0){
-            let controllerDevice = new DeviceAuth(), devicePrepare = controllerDevice.prepare(request);
-            if(devicePrepare instanceof Error) return response.status(480).json({error: devicePrepare.message});
-            
-            let verifyDevice = controllerDevice.verifyDevice();
-            if(verifyDevice instanceof Error) return response.status(480).json({error: verifyDevice.message});
+            let controller = new BasicAuth(authorization), prepare = controller.prepare();
 
-            let verifyGross = controllerDevice.verifyGross();
-            if(verifyGross instanceof Error) return response.status(480).json({error: verifyGross.message});
+            if(prepare instanceof Error) return response.status(403).json({ error: prepare.message });
 
-            let verifyCredentials = await controllerDevice.verifyCredentials();
-            console.log(verifyCredentials)
+            let verify = await controller.validate();
+            if(verify instanceof Error) return response.status(403).json({ error: verify.message });
 
-            return response.send(authorization)
+            request.decoded = verify;
+            Promise.resolve([ new UserBasic().updateLastActiveJob(controller.userId) ]);
+
+            return next(); 
         }
 
         return response.status(401).json({error: "not authorized"})

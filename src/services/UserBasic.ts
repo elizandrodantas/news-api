@@ -29,8 +29,6 @@ export class UserBasic {
         user.updatedAt = undefined;
         user.sessionId = undefined;
         user.active = undefined;
-        user.secretId = undefined;
-        user.clientId = undefined;
 
         return user;
     }
@@ -74,10 +72,10 @@ export class UserBasic {
         return user;
     }
 
-    async userInfo(id: string, jti: string): Promise<Error | User>{
-        if(!id || !jti) return new Error("unauthorized");
+    async userInfo(id: string): Promise<Error | User>{
+        if(!id) return new Error("unauthorized");
 
-        let user = await this.getUserByIdAndSession(id, jti);
+        let user = await this.getUserById(id);
         if(user instanceof Error) return new Error(user.message);
 
         return user;
@@ -109,7 +107,7 @@ export class UserBasic {
         }
     }
 
-    private async updateLastActiveJob(id: string): Promise<void>{
+    async updateLastActiveJob(id: string): Promise<void>{
         if(id){
             await Prisma.user.update({
                 where: {
