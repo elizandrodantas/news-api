@@ -1,11 +1,26 @@
 {
   "name": "api-news-v3",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "api elizandrodantas",
   "main": "dist/app.js",
   "author": "<dantaspm@hotmail.com>",
   "license": "MIT",
+  "keywords": [
+    "nodejs",
+    "typescript",
+    "article",
+    "g1",
+    "r7",
+    "elpais",
+    "news-api",
+    "news",
+    "api",
+    "elizandro dantas",
+    "elizandrodantas"
+  ],
+  "readme": "README.md",
   "scripts": {
+    "start": "node dist/app.js",
     "dev": "ts-node-dev --respawn --transpile-only --ignore-watch node_modules src/server.ts",
     "news": "ts-node-dev --respawn --transpile-only --ignore-watch node_modules src/services/news/index.ts",
     "test:time": "ts-node-dev --respawn --transpile-only --ignore-watch node_modules test/time.ts",
