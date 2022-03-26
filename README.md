@@ -45,6 +45,12 @@ designed for educational purposes. any copyright infringement, [contact](#contac
   - [ACL](#admin---acl-required-permission)
   - [Permission](#admin---permission-required-permission)
 - [Contant](#contact)
+
+# Install
+  ```npm install```
+  ###### #or
+  ```yarn install```
+
 # Endpoint :coffee:
 
 ## Authorization - v0.1

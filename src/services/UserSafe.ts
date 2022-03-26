@@ -1,8 +1,10 @@
 import moment from "moment";
+import { v4 as uuidv4 } from "uuid";
+
 import { Prisma } from "../database/prisma";
 import { RegisterUser } from "./RegisterUser";
-import { v4 as uuidv4 } from 'uuid';
 import admin from "../util/admin";
+import { User } from "@prisma/client";
 
 type iOptionsActionOAuth = "reset" | "block" | "remove" | "unlock" | "create";
 
@@ -21,26 +23,30 @@ interface iResponseActionOAuth extends iResponseRegisterOAuth{
 }
 
 export class UserSafe {
-    async list(): Promise<Error | any[]>{
+    async list(): Promise<Error | {status: boolean; count: number; data: User[]}>{
         let get = await Prisma.user.findMany({
-            select: {
-               id: true,
-               username: true,
-               name: true,
-               lastname: true,
-               cellphone: true,
-               email: true,
-               sessionId: true,
-               mailConfirmated: true,
-               cellConfirmated: true,
-               active: true,
-               createdAt: true
+            include: {
+                roles: true
             }
-        });
+        }), response = [];
 
-        if(!get) return new Error("error get list users");
-
-        return get;
+        if(get.length > 0){
+            for(let indice of get){
+                if(!admin(indice.roles)){
+                    indice.roles = undefined;
+                    indice.password = undefined;
+                    indice.updatedAt = undefined;
+            
+                    response.push(indice);
+                }
+            }
+        }
+        
+        return {
+            status: true,
+            count: response.length,
+            data: response
+        };
     }
 
     async info(id: string, su: boolean = false){ 
@@ -51,10 +57,17 @@ export class UserSafe {
                 id
             },
             include: {
-                roles: true
+                roles: true,
+                basic_relation: {
+                    where: {
+                        expire: {
+                            gte: moment().unix()
+                        }
+                    }
+                }
             }
         });
-
+    
         if(!get) return new Error("user not exist");
         if(admin(get.roles) && !su) return new Error("user without permission");
 
@@ -73,6 +86,7 @@ export class UserSafe {
         };
 
         get.roles = scope;
+        get.password = undefined;
 
         return get;
     }
@@ -228,6 +242,88 @@ export class UserSafe {
         return update;
     }
 
+    // ########### BASIC AUTHORIZATION ############ //
+
+    async createBasic(userId: string, expire: string | number | null = null, su: boolean = false){
+        if(!userId) return new Error("user not found");
+        
+        let expiredExpected = null, typeExpire: "d" | "h" | "m" | "s" | "M" | "w" = "m";
+
+        if(su && expire){
+            if(typeof expire === "string"){
+                let firsh = String(expire).substring(0, 1), firshNumberExist = Number(firsh), type = String(expire).replace(/[0-9]/g, '');
+
+                if(firshNumberExist && firshNumberExist > 0) expiredExpected = firshNumberExist;
+
+                if(type){
+                    if(["day", "days", "d", "D", "dia", "dias"].includes(type)) typeExpire = "d";
+                    if(["weeks", "week", "w", "W", "semana", "semanas"].includes(type)) typeExpire = "w";
+                    if(["hours", "h", "H", "horas", "hora"].includes(type)) typeExpire = "h";
+                    if(["minutes", "minute", "m", "M", "minutos", "minuto"].includes(type)) typeExpire = "m";
+                    if(["months", "month", "mo", "MO", "Mo", "mO", "mes", "meses"].includes(type)) typeExpire = "M";
+                }
+            }
+
+            if(typeof expire === "number"){
+                if(expire > 0) expiredExpected = expire
+            }
+        }else{
+            expiredExpected = 60;
+        }
+
+        let setExp = this.generateExp(expiredExpected, typeExpire), client_id = uuidv4(), client_secret = uuidv4();
+       
+        if(!su){
+            let existAuth = await this.listBasicAuth(userId);
+
+            if(existAuth.length > 0) return new Error("there is a basic auth already configured in the account");
+        }
+
+        let create = await Prisma.basicAuth.create({
+            data: {
+                client_id,
+                client_secret,
+                expire: setExp,
+                UserId: userId
+            }
+        });
+
+        if(!create) return new Error("error created basic auth");
+
+        return {
+            status: true,
+            createdAt: moment().toISOString(),
+            client_id,
+            client_secret,
+            expire: setExp
+        }
+    }
+
+    async userListBasicAuth(userId: string){
+        if(!userId) return new Error("user not declared");
+
+        let allBasicAuth = await this.listBasicAuth(userId);
+
+        return {
+            status: true,
+            count: allBasicAuth.length,
+            data: allBasicAuth
+        }
+    }
+
+    async listBasicAuth(userId: string){
+        return await Prisma.basicAuth.findMany({
+            where: {
+                UserId: userId,
+                expire: {
+                    gte: moment().unix()
+                }
+            }
+        });
+    }
+
+    // ########### UTIL ############# //
+
     private validateParamsEditUser(param: string, type: "email" | "name" | "lastname" | "cellphone" | string){
         let required = {
             email: (() => /^[\w+.]+@\w+\.\w{2,}(?:\.\w{2})?$/i.test(param))(),
@@ -239,94 +335,7 @@ export class UserSafe {
         return required[type];
     }
 
-    async actionOauth(id: string, action: iOptionsActionOAuth): Promise<Error | iResponseActionOAuth>{
-        if(!id) return new Error("user not found");
-
-        let user = await Prisma.user.findUnique({where: { id }});
-        if(!user) return new Error("user not exist");
-
-        let { OAuth, clientId, secretId } = user;
-
-        if(action === "create"){
-            if(OAuth || clientId && secretId) return new Error("OAuth already register");
-        }
-
-        if(action === "remove"){
-            if(!OAuth || !clientId || !secretId) return new Error("OAuth already removed");
-        }
-
-        if(action === "block" || action === "unlock"){
-            if(!clientId && !secretId) return new Error("OAuth not registered");
-        }
-
-        if(action === "block"){
-            if(!OAuth) return new Error("OAuth already blocked");
-        }
-
-        if(action === "unlock"){
-            if(OAuth) return new Error("OAuth already unlocked");
-        }
-
-        let up = await this.OAUTH(id, action);
-        if(up instanceof Error) return new Error(up.message);
-
-        return up;
-    }
-
-    private async OAUTH(id: string, action: "reset" | "block" | "remove" | "unlock" | "create"): Promise<Error | iResponseActionOAuth>{
-        if(!id) return new Error("user id not defined");
-
-        if(action === "create" || action === "reset"){
-            let json = {
-                OAuth: true,
-                secretId: uuidv4(),
-                clientId: uuidv4()
-            }
-
-            let up = await Prisma.user.update({
-                where: { id },
-                data: json
-            });
-    
-            if(!up) return new Error("error create new OAuth");
-    
-            return {
-                status: true,
-                created: moment().toISOString(),
-                ...json
-            }
-        }
-        
-        if(action === "remove"){
-            let up = await Prisma.user.update({
-                where: { id },
-                data: { OAuth: false, clientId: null, secretId: null }
-            });
-
-            if(!up) return new Error("error remove OAuth");
-
-            return {
-                status: true,
-                removed: moment().toISOString()
-            }
-        }
-
-        if(action === "block" || action === "unlock"){
-            let json = { OAuth: action === "block" ? false : true }
-
-            let up = await Prisma.user.update({
-                where: { id },
-                data: json
-            });
-
-            if(!up) return new Error("error " + action + " user");
-
-            return {
-                status: true,
-                [action]: moment().toISOString()
-            }
-        }
-
-        return new Error("action not defined or not found");
+    private generateExp(time: number = 1, short: "d" | "h" | "m" | "s" | "M" | "w" = "m"): number{
+        return moment().add(time, short).unix();
     }
 }

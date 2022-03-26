@@ -18,13 +18,6 @@ app.get('/acl/list/user/:id', can(["acl", "admin"]), new AccessControlListContro
 app.post('/permission/add', new PermissionController().add);
 app.get('/permission/list', new PermissionController().list);
 
-// OAUTH
-app.post('/oauth/create', new UserSafeController().createOauth);
-app.put('/oauth/reset', new UserSafeController().resetOauth);
-app.delete('/oauth/remove', new UserSafeController().removeOauth);
-app.get('/oauth/block/:id', new UserSafeController().blockOauth);
-app.get('/oauth/unlock/:id', new UserSafeController().unlockOauth);
-
 //  USER
 app.get('/user/list', can(["admin", "moderator"]), new UserSafeController().list);
 app.get('/user/:id', can(["admin", "moderator"]), new UserSafeController().info);
@@ -33,6 +26,7 @@ app.put('/user/block', can(["admin", "moderator"]), new UserSafeController().blo
 app.put('/user/unlock', can(["admin", "moderator"]), new UserSafeController().unlock);
 app.put('/user/edit', can(["admin", "moderator"]), new UserSafeController().edit);
 app.delete('/user/remove', can(["admin"]), new UserSafeController().remove);
+app.post('/user/basic-auth/create', can(["admin", "moderator"]), new UserSafeController().createAuth);
 
 
 export { app as routerAdmin }

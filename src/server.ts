@@ -17,8 +17,9 @@ app.use(cors({
 
 app.use('/v1', router);
 
-app.use((request: Request, response: Response, next: NextFunction) => {
-    response.status(404).json({ error: "router not found", time: Date.now(), ip: request.ip });
+app.use((err: any,request: Request, response: Response, next: NextFunction) => {
+    if(err) return response.status(406).json({error: "invalid request, try again"})
+    return response.status(404).json({ error: "router not found", time: Date.now(), ip: request.ip });
 });
 
 app.listen(conf.port[conf.__DEV__ ? "dev" : "prod"] || 3333, () => { console.log(`START PORT ${conf.port[conf.__DEV__ ? "dev" : "prod"] || 3333}`) });

@@ -28,6 +28,9 @@ app.post('/user/email/c', new ConfirmationsController().mail);
 app.post('/user/cell/c', new ensuredAuthenticated().middler, new ConfirmationsController().cell);
 app.get('/user/email/send', new ensuredAuthenticated().middler, new ConfirmationsController().reSendMail);
 app.get('/user/cell/send/', new ensuredAuthenticated().middler, new ConfirmationsController().reSendCell);
+app.get('/user/basic-auth/create', new ensuredAuthenticated().middler, new ConfirmationsController().basicCreate);
+app.get('/user/basic-auth/list', new ensuredAuthenticated().middler, new ConfirmationsController().ListBasicAuth);
+
 
 // ROUTER OTP
 app.get('/otp/verify-task/:id', new TaskOtpController().verify);
