@@ -35,7 +35,7 @@ export class ensuredAuthenticated {
 
             request.decoded = verify;
             Promise.resolve([ new UserBasic().updateLastActiveJob(controller.userId) ]);
-
+            
             return next(); 
         }
 

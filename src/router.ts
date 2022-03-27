@@ -12,7 +12,6 @@ import { ensuredAuthenticated } from "./middleware/ensuredAuthenticated";
 const app = Router();
 
 // SIGN AND REGISTER ROUTER
-app.get('/auth/init', new LoginController().init);
 app.post('/auth', new LoginController().middler);
 app.get('/auth/refresh', new LoginController().refreshToken);
 app.get('/auth/u/:username', new UserBasicController().getByUsername);

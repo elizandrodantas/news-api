@@ -34,11 +34,13 @@ export class Permission {
         return get;
     }
 
-    async getAllPermission(): Promise<Error | iPermission[]>{
+    async getAllPermission(): Promise<Error | {status: boolean; count: number; data: iPermission[]}>{
         let get = await Prisma.permission.findMany();
 
-        if(get instanceof Error) return new Error("error get all permission");
-
-        return get;
+        return {
+            status: true,
+            count: get.length,
+            data: get
+        };
     }
 }

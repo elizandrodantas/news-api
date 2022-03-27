@@ -15,8 +15,8 @@ app.delete('/acl/remove/user', can(["acl", "admin"]), new AccessControlListContr
 app.get('/acl/list/user/:id', can(["acl", "admin"]), new AccessControlListController().list);
 
 //  PERMISSION
-app.post('/permission/add', new PermissionController().add);
-app.get('/permission/list', new PermissionController().list);
+app.post('/permission/add', can(["permission", "admin"]), new PermissionController().add);
+app.get('/permission/list', can(["permission", "admin"]), new PermissionController().list);
 
 //  USER
 app.get('/user/list', can(["admin", "moderator"]), new UserSafeController().list);

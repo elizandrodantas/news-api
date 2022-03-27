@@ -6,10 +6,6 @@ import { JsonWebToken } from '../jobs/JsonWebToken';
 import { Request, Response } from 'express';
 
 export class SignIn {
-    async init(request: Request, response?: Response){
-       return {}
-    }
-
     async execute({
         username,
         password
@@ -39,7 +35,12 @@ export class SignIn {
         if(!active) return new Error("account desabled");
   
         if(Math.floor(moment().diff(moment.unix(lastActive)) / 1000) <= 10) return new Error("user already logged in, try again a few minutes");
-        if(!mailConfirmated) return {error: true, sreen: "mail", id: userIdentify};
+        if(!mailConfirmated){
+            let cError = new Error();
+            cError.message = JSON.stringify({error: "confirm email to access your account", nextPage: { type: "error", roadCode: "emailConfirmationPage" }});
+            cError.status = 401;
+            return cError;
+        }
         
         if(!this.comparePassword(password, encoded)) return new Error("username or password invalid");
 

@@ -1,32 +1,23 @@
 import moment from "moment";
 import { v4 as uuidv4 } from "uuid";
+import { User } from "@prisma/client";
 
 import { Prisma } from "../database/prisma";
 import { RegisterUser } from "./RegisterUser";
-import admin from "../util/admin";
-import { User } from "@prisma/client";
-
-type iOptionsActionOAuth = "reset" | "block" | "remove" | "unlock" | "create";
-
-type iResponseRegisterOAuth = {
-    created?: string;
-    OAuth?: boolean;
-    clientId?: string;
-    secretId?: string;
-}
-
-interface iResponseActionOAuth extends iResponseRegisterOAuth{
-    status: boolean;
-    removed?: string;
-    block?: string;
-    unlock?: string;
-}
+import { admin, moderator } from "../util/admin";
 
 export class UserSafe {
     async list(): Promise<Error | {status: boolean; count: number; data: User[]}>{
         let get = await Prisma.user.findMany({
             include: {
-                roles: true
+                roles: true,
+                basic_relation: {
+                    where: {
+                        expire: {
+                            gte: moment().unix()
+                        }
+                    }
+                }
             }
         }), response = [];
 
@@ -36,6 +27,7 @@ export class UserSafe {
                     indice.roles = undefined;
                     indice.password = undefined;
                     indice.updatedAt = undefined;
+                    indice.basic_relation = indice.basic_relation.length as any;
             
                     response.push(indice);
                 }
@@ -112,9 +104,6 @@ export class UserSafe {
         if(action === "unlock" && active) return new Error("user already unlocked");
 
         let typping = { 
-            su: function(){
-                return roles.some(i => i && i.scope.split(':')[0] === process.env.SU_ADMIN || i.scope.split(':')[0] === process.env.MO_ADMIN);
-            },
             block: function(){
                 return Prisma.user.update({
                     where: {
@@ -134,24 +123,17 @@ export class UserSafe {
                         active: true
                     }
                 });
-            }
+            },
         }
         
-        let status = false;
+        let status = false, work = null;
 
-        if(!su){
-            if(!typping.su()){
-                let work = await Promise.resolve(typping[action]());
-                if(!work) return new Error("error " + action + " user");
-                status = true;
-            }else{
-                return new Error("no permission to block user");
-            }
-        }else{
-            let work = await Promise.resolve(typping[action]());
-            if(!work) return new Error("error " + action + " user");
-            status = true;
-        }
+        if(admin(roles)) return new Error("unable to "+ action +" an admin");
+        if(moderator(roles) && !su) return new Error("unable to "+ action +" moderators");
+
+        work = await typping[action]();
+        if(!work) return new Error("error " + action + " user");
+        status = true;
 
         return {
             status,
@@ -201,14 +183,15 @@ export class UserSafe {
         cellphone?: string;
         email?: string;
         password?: string;
-    }, su: boolean){
+    }, su: boolean = false, userId: string = ""){
         if(!id) return new Error("user not selected");
-
+        
         let user = await Prisma.user.findUnique({where: { id }, include: { roles: true }});
 
         if(!user) return new Error("user not exist");
 
         if(admin(user.roles) && !su) return new Error("not permision edit user");
+        if(moderator(user.roles) && id !== userId) return new Error("no permission to change moderator account");
 
         let data: {
             name?: string;
@@ -251,9 +234,9 @@ export class UserSafe {
 
         if(su && expire){
             if(typeof expire === "string"){
-                let firsh = String(expire).substring(0, 1), firshNumberExist = Number(firsh), type = String(expire).replace(/[0-9]/g, '');
-
-                if(firshNumberExist && firshNumberExist > 0) expiredExpected = firshNumberExist;
+                let firsh = Number(String(expire).replace(/([^\d])+/gim, '')), type = String(expire).replace(/[0-9]/g, '');
+        
+                if(firsh && firsh > 0) expiredExpected = firsh;
 
                 if(type){
                     if(["day", "days", "d", "D", "dia", "dias"].includes(type)) typeExpire = "d";
@@ -272,12 +255,23 @@ export class UserSafe {
         }
 
         let setExp = this.generateExp(expiredExpected, typeExpire), client_id = uuidv4(), client_secret = uuidv4();
-       
+        
+        if(setExp > 21.47 * Math.pow(10, 8)) return new Error("it is not possible to set all this expiry time");
+        
         if(!su){
             let existAuth = await this.listBasicAuth(userId);
 
             if(existAuth.length > 0) return new Error("there is a basic auth already configured in the account");
         }
+
+        let verifyUserSecure = await Prisma.user.findUnique({
+            where: { id: userId },
+            include: { roles: true }
+        });
+
+        if(!verifyUserSecure) return new Error("user not found");
+      
+        if(admin(verifyUserSecure.roles) && !su) return new Error("no permission to modify this user");
 
         let create = await Prisma.basicAuth.create({
             data: {
@@ -286,10 +280,11 @@ export class UserSafe {
                 expire: setExp,
                 UserId: userId
             }
-        });
+        })
+        .catch(() => null);
 
         if(!create) return new Error("error created basic auth");
-
+        
         return {
             status: true,
             createdAt: moment().toISOString(),

@@ -38,8 +38,9 @@ export class UserSafeController {
 
     async unlock(request: Request, response: Response){
         let { id } = request.body;
+        let { client_id } = request.decoded;
 
-        let execute = await new UserSafe().BlockAndUnlok(id, "unlock", request.su, request.decoded.client_id);
+        let execute = await new UserSafe().BlockAndUnlok(id, "unlock", request.su, client_id);
         if(execute instanceof Error) return response.status(400).json({error: execute.message});
 
         return response.status(200).json(execute);
@@ -47,8 +48,9 @@ export class UserSafeController {
 
     async remove(request: Request, response: Response){
         let { id } = request.body;
+        let { client_id } = request.decoded;
 
-        let execute = await new UserSafe().removeUser(id, request.su, request.decoded.client_id);
+        let execute = await new UserSafe().removeUser(id, request.su, client_id);
         if(execute instanceof Error) return response.status(400).json({error: execute.message});
 
         return response.status(200).json(execute);
@@ -56,8 +58,9 @@ export class UserSafeController {
 
     async edit(request: Request, response: Response){
         let { id } = request.body;
+        let { client_id } = request.decoded;
 
-        let execute = await new UserSafe().edit(id, request.body, request.su);
+        let execute = await new UserSafe().edit(id, request.body, request.su, client_id);
         if(execute instanceof Error) return response.status(400).json({error: execute.message});
 
         return response.status(200).json(execute);

@@ -7,7 +7,7 @@ import { ensuredAuthenticated } from './middleware/ensuredAuthenticated';
 const app = Router();
 
 app.use(new ensuredAuthenticated().middler);
-app.options('/', (request: Request, response: Response) => response.status(200).end());
+app.get('/',  ($: Request, response: Response) => response.status(204).end());
 
 // ***** API WORDPRESS ***** //
 

@@ -1,7 +1,7 @@
 import { User } from "@prisma/client";
 import { Prisma } from "../database/prisma";
 import { hideMaskHalf, hideMaskMail } from "../util/mask";
-import adminSafe from '../util/admin';
+import { admin } from '../util/admin';
 import moment from "moment";
 
 export class UserBasic {
@@ -20,7 +20,7 @@ export class UserBasic {
 
         if(!user) return new Error("user not exist");
 
-        if(adminSafe(user.roles)) return new Error("user not exist");
+        if(admin(user.roles)) return new Error("user not exist");
 
         user.email = hideMaskMail(user.email);
         user.cellphone = hideMaskHalf(user.cellphone);
